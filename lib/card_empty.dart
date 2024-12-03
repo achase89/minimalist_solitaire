@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:minimalist_solitaire/card_column.dart';
-import 'package:minimalist_solitaire/playing_card.dart';
-import 'package:minimalist_solitaire/transformed_card.dart';
+import 'package:minimalist_solitaire/card_playing.dart';
+import 'package:minimalist_solitaire/card_transformed.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'card_dimensions.dart';
 
 // The deck of cards which accept the final cards (Ace to King)
 class EmptyCardDeck extends StatefulWidget {
@@ -24,9 +26,12 @@ class EmptyCardDeck extends StatefulWidget {
 class _EmptyCardDeckState extends State<EmptyCardDeck> {
   @override
   Widget build(BuildContext context) {
+    final cardWidth = CardDimensions.calculateCardWidth(context); // Calculate width
+    final cardHeight = CardDimensions.calculateCardHeight(cardWidth); // Calculate height
+
     return DragTarget<Map>(
       builder: (context, listOne, listTwo) {
-        return widget.cardsAdded.length == 0
+        return widget.cardsAdded.isEmpty
             ? Opacity(
           opacity: 0.7,
           child: Container(
@@ -34,14 +39,14 @@ class _EmptyCardDeckState extends State<EmptyCardDeck> {
               borderRadius: BorderRadius.circular(8.0),
               color: Colors.white,
             ),
-            height: 60.0,
-            width: 40,
+            height: cardHeight,
+            width: cardWidth,
             child: Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   Center(
-                    child: Container(
+                    child: SizedBox(
                       height: 20.0,
                       child: _suitToImage(),
                     ),
@@ -59,8 +64,8 @@ class _EmptyCardDeckState extends State<EmptyCardDeck> {
           ],
         );
       },
-      onWillAccept: (value) {
-        PlayingCard cardAdded = value?["cards"].last;
+      onWillAcceptWithDetails: (value) {
+        PlayingCard cardAdded = value.data["cards"].last;
 
         if (cardAdded.cardSuit == widget.cardSuit) {
           if (CardRank.values.indexOf(cardAdded.cardRank) ==
@@ -71,25 +76,25 @@ class _EmptyCardDeckState extends State<EmptyCardDeck> {
 
         return false;
       },
-      onAccept: (value) {
+      onAcceptWithDetails: (value) {
         widget.onCardAdded(
-          value["cards"],
-          value["fromIndex"],
+          value.data["cards"],
+          value.data["fromIndex"],
         );
       },
     );
   }
 
-  Image? _suitToImage() {
+  SvgPicture? _suitToImage() {
     switch (widget.cardSuit) {
       case CardSuit.hearts:
-        return Image.asset('images/hearts.png');
+        return SvgPicture.asset('assets/images/suit_hearts.svg');
       case CardSuit.diamonds:
-        return Image.asset('images/diamonds.png');
+        return SvgPicture.asset('assets/images/suit_diamonds.svg');
       case CardSuit.clubs:
-        return Image.asset('images/clubs.png');
+        return SvgPicture.asset('assets/images/suit_clubs.svg');
       case CardSuit.spades:
-        return Image.asset('images/spades.png');
+        return SvgPicture.asset('assets/images/suit_spades.svg');
       default:
         return null;
     }
