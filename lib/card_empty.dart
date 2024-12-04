@@ -4,6 +4,7 @@ import 'package:minimalist_solitaire/card_playing.dart';
 import 'package:minimalist_solitaire/card_transformed.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'card_dimensions.dart';
+import 'styles.dart';
 
 // The deck of cards which accept the final cards (Ace to King)
 class EmptyCardDeck extends StatefulWidget {
@@ -12,7 +13,8 @@ class EmptyCardDeck extends StatefulWidget {
   final CardAcceptCallback onCardAdded;
   final int columnIndex;
 
-  const EmptyCardDeck({super.key,
+  const EmptyCardDeck({
+    super.key,
     required this.cardSuit,
     required this.cardsAdded,
     required this.onCardAdded,
@@ -20,49 +22,44 @@ class EmptyCardDeck extends StatefulWidget {
   });
 
   @override
-  _EmptyCardDeckState createState() => _EmptyCardDeckState();
+  EmptyCardDeckState createState() => EmptyCardDeckState();
 }
 
-class _EmptyCardDeckState extends State<EmptyCardDeck> {
+class EmptyCardDeckState extends State<EmptyCardDeck> {
   @override
   Widget build(BuildContext context) {
-    final cardWidth = CardDimensions.calculateCardWidth(context); // Calculate width
-    final cardHeight = CardDimensions.calculateCardHeight(cardWidth); // Calculate height
+    final cardWidth =
+        CardDimensions.calculateCardWidth(context); // Calculate width
+    final cardHeight =
+        CardDimensions.calculateCardHeight(cardWidth); // Calculate height
 
     return DragTarget<Map>(
       builder: (context, listOne, listTwo) {
         return widget.cardsAdded.isEmpty
             ? Opacity(
-          opacity: 0.7,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8.0),
-              color: Colors.white,
-            ),
-            height: cardHeight,
-            width: cardWidth,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  Center(
-                    child: SizedBox(
-                      height: 20.0,
-                      child: _suitToImage(),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        )
+                opacity: AppStyles
+                    .cardPlaceholderOpacity, // Use opacity from AppStyles
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppStyles
+                        .cardBorderRadius), // Use borderRadius from AppStyles
+                    color: AppStyles
+                        .cardFaceBackgroundColor, // Use color from AppStyles
+                  ),
+                  height: cardHeight,
+                  width: cardWidth,
+                  child: Center(
+                    child: _suitToImage(),
+                  ),
+                ),
+              )
             : TransformedCard(
-          playingCard: widget.cardsAdded.last,
-          columnIndex: widget.columnIndex,
-          attachedCards: [
-            widget.cardsAdded.last,
-          ],
-        );
+                playingCard: widget.cardsAdded.last,
+                columnIndex: widget.columnIndex,
+                attachedCards: [
+                  widget.cardsAdded.last,
+                ],
+              );
       },
       onWillAcceptWithDetails: (value) {
         PlayingCard cardAdded = value.data["cards"].last;

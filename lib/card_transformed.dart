@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:minimalist_solitaire/card_column.dart';
 import 'package:minimalist_solitaire/card_playing.dart';
 import 'card_dimensions.dart';
+import 'styles.dart';
 
 // TransformedCard makes the card draggable and translates it according to
 // position in the stack.
@@ -14,6 +15,8 @@ class TransformedCard extends StatefulWidget {
   final int columnIndex;
   final List<PlayingCard> attachedCards;
 
+  final Color? backgroundColor;
+
   const TransformedCard({
     super.key,
     required this.playingCard,
@@ -22,6 +25,7 @@ class TransformedCard extends StatefulWidget {
     this.transformIndex = 0,
     required this.columnIndex,
     required this.attachedCards,
+    this.backgroundColor,
   });
 
   @override
@@ -31,7 +35,7 @@ class TransformedCard extends StatefulWidget {
 class TransformedCardState extends State<TransformedCard> {
   @override
   Widget build(BuildContext context) {
-    return  _buildCard();
+    return _buildCard();
   }
 
   Widget _buildCard() {
@@ -40,27 +44,28 @@ class TransformedCardState extends State<TransformedCard> {
 
     return !widget.playingCard.faceUp
         ? Container(
-      height: cardHeight,
-      width: cardWidth,
-      decoration: BoxDecoration(
-        color: Colors.lightGreen,
-        border: Border.all(color: Colors.black),
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-    )
+            height: cardHeight,
+            width: cardWidth,
+            decoration: BoxDecoration(
+              color:
+                  widget.backgroundColor ?? AppStyles.cardBackBackgroundColor,
+              border: Border.all(color: AppStyles.cardBorderColor),
+              borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
+            ),
+          )
         : Draggable<Map>(
-      feedback: CardColumn(
-        cards: widget.attachedCards,
-        columnIndex: 1,
-        onCardsAdded: (card, position) {},
-      ),
-      childWhenDragging: _buildFaceUpCard(),
-      data: {
-        "cards": widget.attachedCards,
-        "fromIndex": widget.columnIndex,
-      },
-      child: _buildFaceUpCard(),
-    );
+            feedback: CardColumn(
+              cards: widget.attachedCards,
+              columnIndex: 1,
+              onCardsAdded: (card, position) {},
+            ),
+            childWhenDragging: _buildFaceUpCard(),
+            data: {
+              "cards": widget.attachedCards,
+              "fromIndex": widget.columnIndex,
+            },
+            child: _buildFaceUpCard(),
+          );
   }
 
   Widget _buildFaceUpCard() {
@@ -79,10 +84,9 @@ class TransformedCardState extends State<TransformedCard> {
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8.0),
-            color: Colors.white,
-            border: Border.all(color: Colors.black),
-
+          color: AppStyles.cardFaceBackgroundColor,
+          border: Border.all(color: AppStyles.cardBorderColor),
+          borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
         ),
         width: cardWidth,
         height: cardHeight,
@@ -92,10 +96,14 @@ class TransformedCardState extends State<TransformedCard> {
             Text(
               _cardRankToString(),
               style: TextStyle(
-                fontSize: 16.0,
-                color: widget.playingCard.cardColor == CardColor.red
-                    ? Colors.red
-                    : Colors.black,
+                fontSize: AppStyles.cardFullFaceTextStyle
+                    .fontSize, // Use fontSize from cardFullFaceTextStyle
+                color: widget.playingCard.cardColor ==
+                        CardColor.red // Keep the conditional color logic
+                    ? AppStyles
+                        .cardSuitColorLight // Use cardSuitColorLight from AppStyles
+                    : AppStyles
+                        .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
               ),
             ),
             _suitToImage(widget.playingCard.cardSuit),
@@ -113,9 +121,9 @@ class TransformedCardState extends State<TransformedCard> {
       color: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.0),
-          color: Colors.white,
-          border: Border.all(color: Colors.black),
+          color: AppStyles.cardFaceBackgroundColor,
+          border: Border.all(color: AppStyles.cardBorderColor),
+          borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
         ),
         width: cardWidth,
         height: cardHeight,
@@ -130,15 +138,20 @@ class TransformedCardState extends State<TransformedCard> {
                   Text(
                     _cardRankToString(),
                     style: TextStyle(
-                      fontSize: 12.0,
-                      color: widget.playingCard.cardColor == CardColor.red
-                          ? Colors.red
-                          : Colors.black,
+                      fontSize: AppStyles.cardPartialFaceTextStyle
+                          .fontSize, // Use fontSize from cardPartialFaceTextStyle
+                      color: widget.playingCard.cardColor ==
+                              CardColor.red // Keep the conditional color logic
+                          ? AppStyles
+                              .cardSuitColorLight // Use cardSuitColorLight from AppStyles
+                          : AppStyles
+                              .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(left: 4.0),
-                    child: SizedBox( // Add SizedBox here
+                    child: SizedBox(
+                      // Add SizedBox here
                       width: 16, // Adjust width as needed
                       height: 16, // Adjust height as needed
                       child: _suitToImage(widget.playingCard.cardSuit),
@@ -150,28 +163,6 @@ class TransformedCardState extends State<TransformedCard> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _cardWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: <Widget>[
-        Text(
-          _cardRankToString(),
-          style: TextStyle(
-            fontSize: 10.0,
-            color: widget.playingCard.cardColor == CardColor.red ? Colors.red : Colors.black,
-          ),
-        ),
-        Text(
-          _cardRankToString(),
-          style: TextStyle(
-            fontSize: 10.0,
-            color: widget.playingCard.cardColor == CardColor.red ? Colors.red : Colors.black,
-          ),
-        ),
-      ],
     );
   }
 
@@ -208,40 +199,27 @@ class TransformedCardState extends State<TransformedCard> {
     }
   }
 
-  String _cardSuitToString(CardSuit cardSuit) {
-    switch (cardSuit) {
-      case CardSuit.hearts:
-        return "H";
-      case CardSuit.diamonds:
-        return "D";
-      case CardSuit.clubs:
-        return "C";
-      case CardSuit.spades:
-        return "S";
-    }
-  }
-
   Widget _suitToImage(CardSuit cardSuit) {
     switch (cardSuit) {
       case CardSuit.hearts:
         return SvgPicture.asset(
           'assets/images/suit_hearts.svg',
-          color: Colors.red, // Set color to red
+          color: AppStyles.cardSuitColorLight,
         );
       case CardSuit.diamonds:
         return SvgPicture.asset(
           'assets/images/suit_diamonds.svg',
-          color: Colors.red, // Set color to red
+          color: AppStyles.cardSuitColorLight,
         );
       case CardSuit.clubs:
         return SvgPicture.asset(
           'assets/images/suit_clubs.svg',
-          color: Colors.black, // Set color to black
+          color: AppStyles.cardSuitColorDark,
         );
       case CardSuit.spades:
         return SvgPicture.asset(
           'assets/images/suit_spades.svg',
-          color: Colors.black, // Set color to black
+          color: AppStyles.cardSuitColorDark,
         );
       default:
         return const SizedBox.shrink();
