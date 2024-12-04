@@ -49,7 +49,10 @@ class TransformedCardState extends State<TransformedCard> {
             decoration: BoxDecoration(
               color:
                   widget.backgroundColor ?? AppStyles.cardBackBackgroundColor,
-              border: Border.all(color: AppStyles.cardBorderColor),
+              border: Border.all(
+                color: AppStyles.cardBorderColor,
+                width: AppStyles.cardBorderWidth,
+              ),
               borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
             ),
           )
@@ -85,7 +88,10 @@ class TransformedCardState extends State<TransformedCard> {
       child: Container(
         decoration: BoxDecoration(
           color: AppStyles.cardFaceBackgroundColor,
-          border: Border.all(color: AppStyles.cardBorderColor),
+          border: Border.all(
+            color: AppStyles.cardBorderColor,
+            width: AppStyles.cardBorderWidth,
+          ),
           borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
         ),
         width: cardWidth,
@@ -122,7 +128,10 @@ class TransformedCardState extends State<TransformedCard> {
       child: Container(
         decoration: BoxDecoration(
           color: AppStyles.cardFaceBackgroundColor,
-          border: Border.all(color: AppStyles.cardBorderColor),
+          border: Border.all(
+            color: AppStyles.cardBorderColor,
+            width: AppStyles.cardBorderWidth,
+          ),
           borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
         ),
         width: cardWidth,

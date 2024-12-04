@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 class AppStyles {
   static const Color backgroundColor = Colors.green;
+  static const Color buttonActiveIconColor = Colors.white;
+  static const Color buttonInactiveIconColor = Colors.grey;
   static const Color cardFaceBackgroundColor = Colors.white;
   static const Color cardBackBackgroundColor = Colors.lightGreen;
   static const Color cardBorderColor = Colors.black;
@@ -15,5 +17,6 @@ class AppStyles {
       TextStyle(fontSize: 16.0, color: Colors.black);
   static const TextStyle cardPartialFaceTextStyle =
       TextStyle(fontSize: 12.0, color: Colors.black);
+  static const double cardBorderWidth = 1.0;
 // ... add more styles as needed ...
 }

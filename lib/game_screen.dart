@@ -10,6 +10,7 @@ import 'card_empty.dart';
 import 'card_playing.dart';
 import 'card_transformed.dart';
 import 'card_placeholder.dart';
+import 'styles.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -55,11 +56,10 @@ class GameScreenState extends State<GameScreen> {
     final cardWidth = CardDimensions.calculateCardWidth(context);
 
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: AppStyles.backgroundColor,
       appBar: AppBar(
         title: const Text("Minimalist Solitaire"),
-        elevation: 0.0,
-        backgroundColor: Colors.green,
+        backgroundColor: AppStyles.backgroundColor,
       ),
       body: Column(
         children: <Widget>[
@@ -324,13 +324,15 @@ class GameScreenState extends State<GameScreen> {
                 icon: const Icon(Icons.undo),
                 onPressed:
                     currentStateIndex > 0 ? _undo : null, // Disable if no undo
-                color: currentStateIndex > 0 ? Colors.white : Colors.grey,
+                color: currentStateIndex < gameStates.length - 1
+                    ? AppStyles.buttonActiveIconColor
+                    : AppStyles.buttonInactiveIconColor,
               ),
               IconButton(
                 // New game button
                 icon: const Icon(
                   Icons.refresh,
-                  color: Colors.white,
+                  color: AppStyles.buttonActiveIconColor,
                 ),
                 onPressed: () {
                   _initialiseGame();
@@ -343,8 +345,8 @@ class GameScreenState extends State<GameScreen> {
                     ? _redo
                     : null, // Disable if no redo
                 color: currentStateIndex < gameStates.length - 1
-                    ? Colors.white
-                    : Colors.grey, // Change color based on state
+                    ? AppStyles.buttonActiveIconColor
+                    : AppStyles.buttonInactiveIconColor,
               ),
             ],
           ),
