@@ -41,11 +41,10 @@ class PlayingCard {
   });
 
   CardColor get cardColor {
-    if(cardSuit == CardSuit.hearts || cardSuit == CardSuit.diamonds) {
+    if (cardSuit == CardSuit.hearts || cardSuit == CardSuit.diamonds) {
       return CardColor.red;
     } else {
       return CardColor.black;
     }
   }
-
 }

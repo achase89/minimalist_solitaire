@@ -3,11 +3,11 @@ import 'package:minimalist_solitaire/card_playing.dart';
 import 'package:minimalist_solitaire/card_transformed.dart';
 import 'card_dimensions.dart';
 
-typedef CardAcceptCallback = Null Function(List<PlayingCard> card, int fromIndex);
+typedef CardAcceptCallback = Null Function(
+    List<PlayingCard> card, int fromIndex);
 
 // This is a stack of overlayed cards (implemented using a stack)
 class CardColumn extends StatefulWidget {
-
   // List of cards in the stack
   final List<PlayingCard> cards;
 
@@ -18,9 +18,10 @@ class CardColumn extends StatefulWidget {
   final int columnIndex;
 
   const CardColumn(
-      {super.key, required this.cards,
-        required this.onCardsAdded,
-        required this.columnIndex});
+      {super.key,
+      required this.cards,
+      required this.onCardsAdded,
+      required this.columnIndex});
 
   @override
   CardColumnState createState() => CardColumnState();
@@ -40,24 +41,25 @@ class CardColumnState extends State<CardColumn> {
             children: widget.cards.map((card) {
               int index = widget.cards.indexOf(card);
 
-
               // Calculate the offset for the current card
               var offset = 0.0;
               for (int i = 0; i < index; i++) {
-              offset += widget.cards[i].faceUp ? 20.0 : 8.0; // Use appropriate distances
+                offset += widget.cards[i].faceUp
+                    ? 20.0
+                    : 8.0; // Use appropriate distances
               }
 
               return Transform(
-              transform: Matrix4.identity()..translate(0.0, offset, 0.0),
-              child: TransformedCard(
-              playingCard: card,
-              transformIndex: index,
-              attachedCards: widget.cards.sublist(index, widget.cards.length),
-              columnIndex: widget.columnIndex, 
-
-              transformDistance: 20.0,
-              facedownDistance: 8.0,
-              ),
+                transform: Matrix4.identity()..translate(0.0, offset, 0.0),
+                child: TransformedCard(
+                  playingCard: card,
+                  transformIndex: index,
+                  attachedCards:
+                      widget.cards.sublist(index, widget.cards.length),
+                  columnIndex: widget.columnIndex,
+                  transformDistance: 20.0,
+                  facedownDistance: 8.0,
+                ),
               );
             }).toList(),
           );
@@ -74,10 +76,10 @@ class CardColumnState extends State<CardColumn> {
               return false;
             }
 
-            int lastColumnCardIndex = CardRank.values
-                .indexOf(widget.cards.last.cardRank);
+            int lastColumnCardIndex =
+                CardRank.values.indexOf(widget.cards.last.cardRank);
             int firstDraggedCardIndex =
-            CardRank.values.indexOf(firstCard.cardRank);
+                CardRank.values.indexOf(firstCard.cardRank);
 
             if (lastColumnCardIndex != firstDraggedCardIndex + 1) {
               return false;
@@ -87,10 +89,10 @@ class CardColumnState extends State<CardColumn> {
               return false;
             }
 
-            int lastColumnCardIndex = CardRank.values
-                .indexOf(widget.cards.last.cardRank);
+            int lastColumnCardIndex =
+                CardRank.values.indexOf(widget.cards.last.cardRank);
             int firstDraggedCardIndex =
-            CardRank.values.indexOf(firstCard.cardRank);
+                CardRank.values.indexOf(firstCard.cardRank);
 
             if (lastColumnCardIndex != firstDraggedCardIndex + 1) {
               return false;
