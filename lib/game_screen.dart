@@ -1,11 +1,15 @@
+// game_screen.dart
+
+import 'dart:collection';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:minimalist_solitaire/card_column.dart';
-import 'package:minimalist_solitaire/card_empty.dart';
-import 'package:minimalist_solitaire/card_playing.dart';
-import 'package:minimalist_solitaire/card_transformed.dart';
+
+import 'card_column.dart';
 import 'card_dimensions.dart';
+import 'card_empty.dart';
+import 'card_playing.dart';
+import 'card_transformed.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -36,6 +40,10 @@ class GameScreenState extends State<GameScreen> {
   List<PlayingCard> finalSpadesDeck = [];
   List<PlayingCard> finalClubsDeck = [];
 
+  // List to store game states
+  List<List<List<PlayingCard>>> gameStates = [];
+  int currentStateIndex = -1;
+
   @override
   void initState() {
     super.initState();
@@ -52,24 +60,10 @@ class GameScreenState extends State<GameScreen> {
         title: const Text("Minimalist Solitaire"),
         elevation: 0.0,
         backgroundColor: Colors.green,
-        actions: <Widget>[
-          InkWell( // New game button
-            splashColor: Colors.white,
-            onTap: () {
-              _initialiseGame();
-            },
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Icon(
-                Icons.refresh,
-                color: Colors.white,
-              ),
-            ),
-          )
-        ],
       ),
       body: Column(
         children: <Widget>[
+          // Stock, waste, and foundations
           Flexible(
             flex: 0,
             child: Padding(
@@ -106,11 +100,7 @@ class GameScreenState extends State<GameScreen> {
                     onTap: () {
                       setState(() {
                         if (stockPile.isEmpty) {
-                          stockPile.addAll(wastePile.map((card) {
-                            return card
-                              ..opened = false
-                              ..faceUp = false;
-                          }));
+                          stockPile.addAll(wastePile.reversed.map((card) => card..faceUp = false));
                           wastePile.clear();
                         } else {
                           wastePile.add(
@@ -119,6 +109,7 @@ class GameScreenState extends State<GameScreen> {
                               ..opened = true,
                           );
                         }
+                        _saveGameState();
                       });
                     },
                   ),
@@ -140,11 +131,14 @@ class GameScreenState extends State<GameScreen> {
                     cardSuit: CardSuit.hearts,
                     cardsAdded: finalHeartsDeck,
                     onCardAdded: (cards, index) {
-                      finalHeartsDeck.addAll(cards);
-                      int length = _getListFromIndex(index).length;
-                      _getListFromIndex(index)
-                          .removeRange(length - cards.length, length);
-                      _refreshList(index);
+                      setState(() {
+                        finalHeartsDeck.addAll(cards);
+                        int length = _getListFromIndex(index).length;
+                        _getListFromIndex(index)
+                            .removeRange(length - cards.length, length);
+                        _refreshList(index);
+                        _saveGameState();
+                      });
                     },
                     columnIndex: 8,
                   ),
@@ -152,11 +146,14 @@ class GameScreenState extends State<GameScreen> {
                     cardSuit: CardSuit.diamonds,
                     cardsAdded: finalDiamondsDeck,
                     onCardAdded: (cards, index) {
-                      finalDiamondsDeck.addAll(cards);
-                      int length = _getListFromIndex(index).length;
-                      _getListFromIndex(index)
-                          .removeRange(length - cards.length, length);
-                      _refreshList(index);
+                      setState(() {
+                        finalDiamondsDeck.addAll(cards);
+                        int length = _getListFromIndex(index).length;
+                        _getListFromIndex(index)
+                            .removeRange(length - cards.length, length);
+                        _refreshList(index);
+                        _saveGameState();
+                      });
                     },
                     columnIndex: 9,
                   ),
@@ -164,11 +161,14 @@ class GameScreenState extends State<GameScreen> {
                     cardSuit: CardSuit.spades,
                     cardsAdded: finalSpadesDeck,
                     onCardAdded: (cards, index) {
-                      finalSpadesDeck.addAll(cards);
-                      int length = _getListFromIndex(index).length;
-                      _getListFromIndex(index)
-                          .removeRange(length - cards.length, length);
-                      _refreshList(index);
+                      setState(() {
+                        finalSpadesDeck.addAll(cards);
+                        int length = _getListFromIndex(index).length;
+                        _getListFromIndex(index)
+                            .removeRange(length - cards.length, length);
+                        _refreshList(index);
+                        _saveGameState();
+                      });
                     },
                     columnIndex: 10,
                   ),
@@ -176,11 +176,14 @@ class GameScreenState extends State<GameScreen> {
                     cardSuit: CardSuit.clubs,
                     cardsAdded: finalClubsDeck,
                     onCardAdded: (cards, index) {
-                      finalClubsDeck.addAll(cards);
-                      int length = _getListFromIndex(index).length;
-                      _getListFromIndex(index)
-                          .removeRange(length - cards.length, length);
-                      _refreshList(index);
+                      setState(() {
+                        finalClubsDeck.addAll(cards);
+                        int length = _getListFromIndex(index).length;
+                        _getListFromIndex(index)
+                            .removeRange(length - cards.length, length);
+                        _refreshList(index);
+                        _saveGameState();
+                      });
                     },
                     columnIndex: 11,
                   ),
@@ -188,6 +191,7 @@ class GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
+          // Game columns
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0),
@@ -205,6 +209,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 1,
@@ -221,6 +226,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 2,
@@ -237,6 +243,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 3,
@@ -253,6 +260,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 4,
@@ -269,6 +277,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 5,
@@ -285,6 +294,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 6,
@@ -301,6 +311,7 @@ class GameScreenState extends State<GameScreen> {
                           _getListFromIndex(index)
                               .removeRange(length - cards.length, length);
                           _refreshList(index);
+                          _saveGameState();
                         });
                       },
                       columnIndex: 7,
@@ -309,6 +320,24 @@ class GameScreenState extends State<GameScreen> {
                 ],
               ),
             ),
+          ),
+          // Game options row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute buttons evenly
+            children: [
+              IconButton( // Undo button
+                icon: const Icon(Icons.undo),
+                onPressed: _undo,
+              ),
+              IconButton( // New game button
+                icon: const Icon(Icons.refresh),
+                onPressed: _initialiseGame,
+              ),
+              IconButton( // Redo button
+                icon: const Icon(Icons.redo),
+                onPressed: _redo,
+              ),
+            ],
           ),
         ],
       ),
@@ -347,6 +376,8 @@ class GameScreenState extends State<GameScreen> {
         ));
       }
     }
+
+    allCards.shuffle(); // Shuffle the deck here
 
     Random random = Random();
 
@@ -444,7 +475,74 @@ class GameScreenState extends State<GameScreen> {
         ..faceUp = true,
     );
 
-    setState(() {});
+    // Initialize game state
+    _saveGameState();
+  }
+
+  void _saveGameState() {
+    final newState = [
+      cardColumn1.toList(),
+      cardColumn2.toList(),
+      cardColumn3.toList(),
+      cardColumn4.toList(),
+      cardColumn5.toList(),
+      cardColumn6.toList(),
+      cardColumn7.toList(),
+      stockPile.toList(),
+      wastePile.toList(),
+      finalHeartsDeck.toList(),
+      finalDiamondsDeck.toList(),
+      finalSpadesDeck.toList(),
+      finalClubsDeck.toList(),
+    ];
+    gameStates = gameStates.sublist(0, currentStateIndex + 1);
+    gameStates.add(newState);
+    currentStateIndex++;
+  }
+
+  void _undo() {
+    if (currentStateIndex > 0) {
+      currentStateIndex--;
+      _applyGameState(gameStates[currentStateIndex]);
+      setState(() {});
+    }
+  }
+
+  void _redo() {
+    if (currentStateIndex < gameStates.length - 1) {
+      currentStateIndex++;
+      _applyGameState(gameStates[currentStateIndex]);
+      setState(() {});
+    }
+  }
+
+  void _applyGameState(List<List<PlayingCard>> state) {
+    cardColumn1.clear();
+    cardColumn1.addAll(state[0]);
+    cardColumn2.clear();
+    cardColumn2.addAll(state[1]);
+    cardColumn3.clear();
+    cardColumn3.addAll(state[2]);
+    cardColumn4.clear();
+    cardColumn4.addAll(state[3]);
+    cardColumn5.clear();
+    cardColumn5.addAll(state[4]);
+    cardColumn6.clear();
+    cardColumn6.addAll(state[5]);
+    cardColumn7.clear();
+    cardColumn7.addAll(state[6]);
+    stockPile.clear();
+    stockPile.addAll(state[7]);
+    wastePile.clear();
+    wastePile.addAll(state[8]);
+    finalHeartsDeck.clear();
+    finalHeartsDeck.addAll(state[9]);
+    finalDiamondsDeck.clear();
+    finalDiamondsDeck.addAll(state[10]);
+    finalSpadesDeck.clear();
+    finalSpadesDeck.addAll(state[11]);
+    finalClubsDeck.clear();
+    finalClubsDeck.addAll(state[12]);
   }
 
   void _refreshList(int index) {

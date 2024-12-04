@@ -43,7 +43,7 @@ class TransformedCardState extends State<TransformedCard> {
       height: cardHeight,
       width: cardWidth,
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: Colors.lightGreen,
         border: Border.all(color: Colors.black),
         borderRadius: BorderRadius.circular(8.0),
       ),
