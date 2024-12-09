@@ -1,3 +1,5 @@
+// card_empty.dart
+
 import 'package:flutter/material.dart';
 import 'package:minimalist_solitaire/card_column.dart';
 import 'package:minimalist_solitaire/card_playing.dart';
@@ -6,26 +8,26 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'card_dimensions.dart';
 import 'styles.dart';
 
-// The deck of cards which accept the final cards (Ace to King)
-class EmptyCardDeck extends StatefulWidget {
+// foundation piles to accept cards (A to K)
+class FoundationPile extends StatefulWidget {
   final CardSuit cardSuit;
   final List<PlayingCard> cardsAdded;
-  final CardAcceptCallback onCardAdded;
+  final CardAcceptCallback onCardAddedToFoundation;
   final int columnIndex;
 
-  const EmptyCardDeck({
+  const FoundationPile({
     super.key,
     required this.cardSuit,
     required this.cardsAdded,
-    required this.onCardAdded,
+    required this.onCardAddedToFoundation,
     required this.columnIndex,
   });
 
   @override
-  EmptyCardDeckState createState() => EmptyCardDeckState();
+  FoundationPileState createState() => FoundationPileState();
 }
 
-class EmptyCardDeckState extends State<EmptyCardDeck> {
+class FoundationPileState extends State<FoundationPile> {
   @override
   Widget build(BuildContext context) {
     final cardWidth =
@@ -74,7 +76,7 @@ class EmptyCardDeckState extends State<EmptyCardDeck> {
         return false;
       },
       onAcceptWithDetails: (value) {
-        widget.onCardAdded(
+        widget.onCardAddedToFoundation(
           value.data["cards"],
           value.data["fromIndex"],
         );

@@ -1,3 +1,5 @@
+// card_transformed.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:minimalist_solitaire/card_column.dart';
@@ -60,7 +62,7 @@ class TransformedCardState extends State<TransformedCard> {
             feedback: CardColumn(
               cards: widget.attachedCards,
               columnIndex: 1,
-              onCardsAdded: (card, position) {},
+              onCardsAddedToColumn: (card, position) {},
             ),
             childWhenDragging: _buildFaceUpCard(),
             data: {

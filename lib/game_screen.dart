@@ -1,54 +1,32 @@
 // game_screen.dart
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:minimalist_solitaire/card_playing.dart';
+import 'package:minimalist_solitaire/game_state.dart'; // Import your GameState class
 
 import 'card_column.dart';
 import 'card_dimensions.dart';
 import 'card_empty.dart';
-import 'card_playing.dart';
-import 'card_transformed.dart';
 import 'card_placeholder.dart';
+import 'card_transformed.dart';
 import 'styles.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
   @override
-  GameScreenState createState() => GameScreenState();
+  GameScreenManager createState() => GameScreenManager();
 }
 
-class GameScreenState extends State<GameScreen> {
-  // Stores the cards on the seven columns
-  List<PlayingCard> cardColumn1 = [];
-  List<PlayingCard> cardColumn2 = [];
-  List<PlayingCard> cardColumn3 = [];
-  List<PlayingCard> cardColumn4 = [];
-  List<PlayingCard> cardColumn5 = [];
-  List<PlayingCard> cardColumn6 = [];
-  List<PlayingCard> cardColumn7 = [];
-
-  // Stores the card deck
-  // List to store the closed card deck (stock pile)
-  List<PlayingCard> stockPile = [];
-  // List to store the opened card deck (waste pile)
-  List<PlayingCard> wastePile = [];
-
-  // Stores the card in the foundation piles
-  List<PlayingCard> finalHeartsDeck = [];
-  List<PlayingCard> finalDiamondsDeck = [];
-  List<PlayingCard> finalSpadesDeck = [];
-  List<PlayingCard> finalClubsDeck = [];
-
-  // List to store game states
-  List<List<List<PlayingCard>>> gameStates = [];
-  int currentStateIndex = -1;
+class GameScreenManager extends State<GameScreen> {
+  late GameState gameState; // Declare gameState
 
   @override
   void initState() {
     super.initState();
-    _initialiseGame();
+    gameState = GameState(); // Initialise gameState
+    gameState.initialiseGame(); // Call initialiseGame
+    gameState.onWin = _handleWin; // Call handleWin
   }
 
   @override
@@ -73,36 +51,37 @@ class GameScreenState extends State<GameScreen> {
                 children: <Widget>[
                   //Stock Pile
                   InkWell(
-                    child: stockPile.isNotEmpty
+                    child: gameState.stockPile.isNotEmpty
                         ? TransformedCard(
-                            playingCard: stockPile.last,
-                            attachedCards: [stockPile.last],
+                            playingCard: gameState.stockPile.last,
+                            attachedCards: [gameState.stockPile.last],
                             columnIndex: 0,
                           )
                         : const CardPlaceholder(),
                     onTap: () {
                       setState(() {
-                        if (stockPile.isEmpty) {
-                          stockPile.addAll(wastePile.reversed.map((card) => card
-                            ..faceUp = false
-                            ..opened = false)); // Reset opened to false
-                          wastePile.clear();
+                        if (gameState.stockPile.isEmpty) {
+                          gameState.stockPile.addAll(
+                              gameState.wastePile.reversed.map((card) => card
+                                ..faceUp = false
+                                ..opened = false)); // Reset opened to false
+                          gameState.wastePile.clear();
                         } else {
-                          wastePile.add(
-                            stockPile.removeLast()
+                          gameState.wastePile.add(
+                            gameState.stockPile.removeLast()
                               ..faceUp = true
                               ..opened = true,
                           );
                         }
-                        _saveGameState();
+                        gameState.saveGameState();
                       });
                     },
                   ),
                   // Waste pile
-                  wastePile.isNotEmpty
+                  gameState.wastePile.isNotEmpty
                       ? TransformedCard(
-                          playingCard: wastePile.last,
-                          attachedCards: [wastePile.last],
+                          playingCard: gameState.wastePile.last,
+                          attachedCards: [gameState.wastePile.last],
                           columnIndex: 0,
                         )
                       : const CardPlaceholder(),
@@ -113,62 +92,50 @@ class GameScreenState extends State<GameScreen> {
                           cardWidth), // Spacer between waste pile and foundation piles
 
                   //Foundation Piles
-                  EmptyCardDeck(
+                  FoundationPile(
                     cardSuit: CardSuit.hearts,
-                    cardsAdded: finalHeartsDeck,
-                    onCardAdded: (cards, index) {
+                    cardsAdded: gameState.finalHeartsDeck,
+                    onCardAddedToFoundation: (cards, index) {
                       setState(() {
-                        finalHeartsDeck.addAll(cards);
-                        int length = _getListFromIndex(index).length;
-                        _getListFromIndex(index)
-                            .removeRange(length - cards.length, length);
-                        _refreshList(index);
-                        _saveGameState();
+                        gameState.moveCards(
+                            index, GameState.finalHeartsDeckIndex, cards);
+                        gameState.saveGameState();
                       });
                     },
                     columnIndex: 8,
                   ),
-                  EmptyCardDeck(
+                  FoundationPile(
                     cardSuit: CardSuit.diamonds,
-                    cardsAdded: finalDiamondsDeck,
-                    onCardAdded: (cards, index) {
+                    cardsAdded: gameState.finalDiamondsDeck,
+                    onCardAddedToFoundation: (cards, index) {
                       setState(() {
-                        finalDiamondsDeck.addAll(cards);
-                        int length = _getListFromIndex(index).length;
-                        _getListFromIndex(index)
-                            .removeRange(length - cards.length, length);
-                        _refreshList(index);
-                        _saveGameState();
+                        gameState.moveCards(
+                            index, GameState.finalDiamondsDeckIndex, cards);
+                        gameState.saveGameState();
                       });
                     },
                     columnIndex: 9,
                   ),
-                  EmptyCardDeck(
+                  FoundationPile(
                     cardSuit: CardSuit.spades,
-                    cardsAdded: finalSpadesDeck,
-                    onCardAdded: (cards, index) {
+                    cardsAdded: gameState.finalSpadesDeck,
+                    onCardAddedToFoundation: (cards, index) {
                       setState(() {
-                        finalSpadesDeck.addAll(cards);
-                        int length = _getListFromIndex(index).length;
-                        _getListFromIndex(index)
-                            .removeRange(length - cards.length, length);
-                        _refreshList(index);
-                        _saveGameState();
+                        gameState.moveCards(
+                            index, GameState.finalSpadesDeckIndex, cards);
+                        gameState.saveGameState();
                       });
                     },
                     columnIndex: 10,
                   ),
-                  EmptyCardDeck(
+                  FoundationPile(
                     cardSuit: CardSuit.clubs,
-                    cardsAdded: finalClubsDeck,
-                    onCardAdded: (cards, index) {
+                    cardsAdded: gameState.finalClubsDeck,
+                    onCardAddedToFoundation: (cards, index) {
                       setState(() {
-                        finalClubsDeck.addAll(cards);
-                        int length = _getListFromIndex(index).length;
-                        _getListFromIndex(index)
-                            .removeRange(length - cards.length, length);
-                        _refreshList(index);
-                        _saveGameState();
+                        gameState.moveCards(
+                            index, GameState.finalClubsDeckIndex, cards);
+                        gameState.saveGameState();
                       });
                     },
                     columnIndex: 11,
@@ -188,15 +155,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 1
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn1,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn1,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn1.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 1, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 1,
@@ -206,15 +169,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 2
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn2,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn2,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn2.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 2, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 2,
@@ -224,15 +183,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 3
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn3,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn3,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn3.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 3, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 3,
@@ -242,15 +197,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 4
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn4,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn4,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn4.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 4, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 4,
@@ -260,15 +211,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 5
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn5,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn5,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn5.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 5, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 5,
@@ -278,15 +225,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 6
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn6,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn6,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn6.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 6, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 6,
@@ -296,15 +239,11 @@ class GameScreenState extends State<GameScreen> {
                     // Card Column 7
                     width: cardWidth,
                     child: CardColumn(
-                      cards: cardColumn7,
-                      onCardsAdded: (cards, index) {
+                      cards: gameState.cardColumn7,
+                      onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          cardColumn7.addAll(cards);
-                          int length = _getListFromIndex(index).length;
-                          _getListFromIndex(index)
-                              .removeRange(length - cards.length, length);
-                          _refreshList(index);
-                          _saveGameState();
+                          gameState.moveCards(fromIndex, 7, cards);
+                          gameState.saveGameState();
                         });
                       },
                       columnIndex: 7,
@@ -314,328 +253,77 @@ class GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
-          // Game options row
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceEvenly, // Distribute buttons evenly
-            children: [
-              IconButton(
-                // Undo button
-                icon: const Icon(Icons.undo),
-                onPressed:
-                    currentStateIndex > 0 ? _undo : null, // Disable if no undo
-                color: currentStateIndex < gameStates.length - 1
-                    ? AppStyles.buttonActiveIconColor
-                    : AppStyles.buttonInactiveIconColor,
-              ),
-              IconButton(
-                // New game button
-                icon: const Icon(
-                  Icons.refresh,
-                  color: AppStyles.buttonActiveIconColor,
-                ),
-                onPressed: () {
-                  _initialiseGame();
-                },
-              ),
-              IconButton(
-                // Redo button
-                icon: const Icon(Icons.redo),
-                onPressed: currentStateIndex < gameStates.length - 1
-                    ? _redo
-                    : null, // Disable if no redo
-                color: currentStateIndex < gameStates.length - 1
-                    ? AppStyles.buttonActiveIconColor
-                    : AppStyles.buttonInactiveIconColor,
-              ),
-            ],
+// Game options
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  child: ElevatedButton(
+                    onPressed: gameState.currentStateIndex > 0
+                        ? () {
+                            setState(() {
+                              gameState.undo();
+                            });
+                          }
+                        : null,
+                    style: AppStyles.pillShapedButtonStyle(
+                      // Use the style from styles.dart
+                      activeColor: AppStyles.buttonActiveIconColor,
+                      inactiveColor: AppStyles.buttonInactiveIconColor,
+                      onPressColor: AppStyles.buttonOnPressIconColor,
+                      icon: Icons.undo,
+                    ),
+                    child: const Icon(Icons.undo),
+                  ),
+                ), // Undo button
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        gameState.initialiseGame();
+                      });
+                    },
+                    style: AppStyles.pillShapedButtonStyle(
+                      // Use the style from styles.dart
+                      activeColor: AppStyles.buttonActiveIconColor,
+                      inactiveColor: AppStyles.buttonInactiveIconColor,
+                      onPressColor: AppStyles.buttonOnPressIconColor,
+                      icon: Icons.refresh,
+                    ),
+                    child: const Icon(Icons.refresh),
+                  ),
+                ), // New game button
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  child: ElevatedButton(
+                    onPressed: gameState.currentStateIndex <
+                            gameState.gameStates.length - 1
+                        ? () {
+                            setState(() {
+                              gameState.redo();
+                            });
+                          }
+                        : null,
+                    style: AppStyles.pillShapedButtonStyle(
+                      // Use the style from styles.dart
+                      activeColor: AppStyles.buttonActiveIconColor,
+                      inactiveColor: AppStyles.buttonInactiveIconColor,
+                      onPressColor: AppStyles.buttonOnPressIconColor,
+                      icon: Icons.redo,
+                    ),
+                    child: const Icon(Icons.redo),
+                  ),
+                ), // redo button
+              ],
+            ),
           ),
         ],
       ),
     );
-  }
-
-  // Initialise a new game
-  void _initialiseGame() {
-    cardColumn1 = [];
-    cardColumn2 = [];
-    cardColumn3 = [];
-    cardColumn4 = [];
-    cardColumn5 = [];
-    cardColumn6 = [];
-    cardColumn7 = [];
-
-    // Stores the card deck
-    stockPile = [];
-    wastePile = [];
-
-    // Stores the card in the upper boxes
-    finalHeartsDeck = [];
-    finalDiamondsDeck = [];
-    finalSpadesDeck = [];
-    finalClubsDeck = [];
-
-    List<PlayingCard> allCards = [];
-
-    gameStates.clear(); // Clear the game states list
-    currentStateIndex = -1; // Reset the current state index
-
-    // Add all cards to deck
-    for (var suit in CardSuit.values) {
-      for (var rank in CardRank.values) {
-        allCards.add(PlayingCard(
-          cardRank: rank,
-          cardSuit: suit,
-          faceUp: false,
-        ));
-      }
-    }
-
-    allCards.shuffle(); // Shuffle the deck here
-
-    Random random = Random();
-
-    // Add cards to columns and remaining to deck
-    for (int i = 0; i < 28; i++) {
-      int randomNumber = random.nextInt(allCards.length);
-
-      if (i == 0) {
-        PlayingCard card = allCards[randomNumber];
-        cardColumn1.add(
-          card
-            ..opened = true
-            ..faceUp = true,
-        );
-        allCards.removeAt(randomNumber);
-      } else if (i > 0 && i < 3) {
-        if (i == 2) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn2.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn2.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      } else if (i > 2 && i < 6) {
-        if (i == 5) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn3.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn3.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      } else if (i > 5 && i < 10) {
-        if (i == 9) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn4.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn4.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      } else if (i > 9 && i < 15) {
-        if (i == 14) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn5.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn5.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      } else if (i > 14 && i < 21) {
-        if (i == 20) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn6.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn6.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      } else {
-        if (i == 27) {
-          PlayingCard card = allCards[randomNumber];
-          cardColumn7.add(
-            card
-              ..opened = true
-              ..faceUp = true,
-          );
-        } else {
-          cardColumn7.add(allCards[randomNumber]);
-        }
-        allCards.removeAt(randomNumber);
-      }
-    }
-
-    stockPile = allCards;
-
-    // Initialize game state
-    _saveGameState();
-
-    setState(() {});
-  }
-
-  void _saveGameState() {
-    final newState = [
-      cardColumn1
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn2
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn3
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn4
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn5
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn6
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      cardColumn7
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      stockPile
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      wastePile
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      finalHeartsDeck
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      finalDiamondsDeck
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      finalSpadesDeck
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-      finalClubsDeck
-          .map((card) => PlayingCard(
-              cardSuit: card.cardSuit,
-              cardRank: card.cardRank,
-              faceUp: card.faceUp))
-          .toList(),
-    ];
-    gameStates = gameStates.sublist(0, currentStateIndex + 1);
-    gameStates.add(newState);
-    currentStateIndex++;
-  }
-
-  void _undo() {
-    if (currentStateIndex > 0) {
-      currentStateIndex--;
-      _applyGameState(gameStates[currentStateIndex]);
-      setState(() {});
-    }
-  }
-
-  void _redo() {
-    if (currentStateIndex < gameStates.length - 1) {
-      currentStateIndex++;
-      _applyGameState(gameStates[currentStateIndex]);
-      setState(() {});
-    }
-  }
-
-  void _applyGameState(List<List<PlayingCard>> state) {
-    cardColumn1.clear();
-    cardColumn1.addAll(state[0]);
-    cardColumn2.clear();
-    cardColumn2.addAll(state[1]);
-    cardColumn3.clear();
-    cardColumn3.addAll(state[2]);
-    cardColumn4.clear();
-    cardColumn4.addAll(state[3]);
-    cardColumn5.clear();
-    cardColumn5.addAll(state[4]);
-    cardColumn6.clear();
-    cardColumn6.addAll(state[5]);
-    cardColumn7.clear();
-    cardColumn7.addAll(state[6]);
-    stockPile.clear();
-    stockPile.addAll(state[7]);
-    wastePile.clear();
-    wastePile.addAll(state[8]);
-    finalHeartsDeck.clear();
-    finalHeartsDeck.addAll(state[9]);
-    finalDiamondsDeck.clear();
-    finalDiamondsDeck.addAll(state[10]);
-    finalSpadesDeck.clear();
-    finalSpadesDeck.addAll(state[11]);
-    finalClubsDeck.clear();
-    finalClubsDeck.addAll(state[12]);
-  }
-
-  void _refreshList(int index) {
-    if (finalDiamondsDeck.length +
-            finalHeartsDeck.length +
-            finalClubsDeck.length +
-            finalSpadesDeck.length ==
-        52) {
-      _handleWin();
-    }
-    setState(() {
-      if (_getListFromIndex(index).isNotEmpty) {
-        _getListFromIndex(index)[_getListFromIndex(index).length - 1]
-          ..opened = true
-          ..faceUp = true;
-      }
-    });
   }
 
   // Handle a win condition
@@ -649,7 +337,7 @@ class GameScreenState extends State<GameScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                _initialiseGame();
+                gameState.initialiseGame();
                 Navigator.pop(context);
               },
               child: const Text("Play again"),
@@ -658,36 +346,5 @@ class GameScreenState extends State<GameScreen> {
         );
       },
     );
-  }
-
-  List<PlayingCard> _getListFromIndex(int index) {
-    switch (index) {
-      case 0:
-        return wastePile;
-      case 1:
-        return cardColumn1;
-      case 2:
-        return cardColumn2;
-      case 3:
-        return cardColumn3;
-      case 4:
-        return cardColumn4;
-      case 5:
-        return cardColumn5;
-      case 6:
-        return cardColumn6;
-      case 7:
-        return cardColumn7;
-      case 8:
-        return finalHeartsDeck;
-      case 9:
-        return finalDiamondsDeck;
-      case 10:
-        return finalSpadesDeck;
-      case 11:
-        return finalClubsDeck;
-      default:
-        return [];
-    }
   }
 }

@@ -1,3 +1,5 @@
+// card_column.dart
+
 import 'package:flutter/material.dart';
 import 'package:minimalist_solitaire/card_playing.dart';
 import 'package:minimalist_solitaire/card_transformed.dart';
@@ -12,7 +14,7 @@ class CardColumn extends StatefulWidget {
   final List<PlayingCard> cards;
 
   // Callback when card is added to the stack
-  final CardAcceptCallback onCardsAdded;
+  final CardAcceptCallback onCardsAddedToColumn;
 
   // The index of the list in the game
   final int columnIndex;
@@ -20,7 +22,7 @@ class CardColumn extends StatefulWidget {
   const CardColumn(
       {super.key,
       required this.cards,
-      required this.onCardsAdded,
+      required this.onCardsAddedToColumn,
       required this.columnIndex});
 
   @override
@@ -101,7 +103,7 @@ class CardColumnState extends State<CardColumn> {
           return true;
         },
         onAcceptWithDetails: (value) {
-          widget.onCardsAdded(
+          widget.onCardsAddedToColumn(
             value.data["cards"],
             value.data["fromIndex"],
           );

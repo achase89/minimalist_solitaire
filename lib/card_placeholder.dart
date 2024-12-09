@@ -1,3 +1,5 @@
+// card_placeholder.dart
+
 import 'package:flutter/material.dart';
 import 'card_dimensions.dart';
 import 'styles.dart';
