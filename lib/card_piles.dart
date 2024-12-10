@@ -1,9 +1,11 @@
-// card_column.dart
+// card_piles.dart
 
 import 'package:flutter/material.dart';
-import 'package:minimalist_solitaire/card_playing.dart';
-import 'package:minimalist_solitaire/card_transformed.dart';
+import 'package:minimalist_solitaire/card_creation.dart';
+import 'package:minimalist_solitaire/card_visuals.dart';
+
 import 'card_dimensions.dart';
+import 'game_state.dart';
 
 typedef CardAcceptCallback = Null Function(
     List<PlayingCard> card, int fromIndex);
@@ -12,6 +14,7 @@ typedef CardAcceptCallback = Null Function(
 class CardColumn extends StatefulWidget {
   // List of cards in the stack
   final List<PlayingCard> cards;
+  final GameState gameState;
 
   // Callback when card is added to the stack
   final CardAcceptCallback onCardsAddedToColumn;
@@ -19,11 +22,13 @@ class CardColumn extends StatefulWidget {
   // The index of the list in the game
   final int columnIndex;
 
-  const CardColumn(
-      {super.key,
-      required this.cards,
-      required this.onCardsAddedToColumn,
-      required this.columnIndex});
+  const CardColumn({
+    super.key,
+    required this.cards,
+    required this.onCardsAddedToColumn,
+    required this.columnIndex,
+    required this.gameState,
+  });
 
   @override
   CardColumnState createState() => CardColumnState();
@@ -40,15 +45,34 @@ class CardColumnState extends State<CardColumn> {
       child: DragTarget<Map>(
         builder: (context, listOne, listTwo) {
           return Stack(
-            children: widget.cards.map((card) {
-              int index = widget.cards.indexOf(card);
+            children: widget.cards.asMap().entries.map((entry) {
+              final card = entry.value;
+              final index = entry.key;
 
               // Calculate the offset for the current card
               var offset = 0.0;
               for (int i = 0; i < index; i++) {
-                offset += widget.cards[i].faceUp
-                    ? 20.0
-                    : 8.0; // Use appropriate distances
+                offset += widget.cards[i].faceUp ? 20.0 : 8.0;
+              }
+
+              // In card_piles.dart, inside the builder method
+
+              // Find the index of the first face-up card in the column
+              int firstFaceUpIndex = widget.cards.indexWhere((card) => card.faceUp);
+
+              // If no face-up cards are found, set firstFaceUpIndex to the column length
+              if (firstFaceUpIndex == -1) {
+                firstFaceUpIndex = widget.cards.length;
+              }
+
+              String attachedCardsString = widget.cards
+                  .sublist(firstFaceUpIndex + 1, widget.cards.length)
+                  .map((card) => '${card.cardRank} of ${card.cardSuit}')
+                  .join(' attached to ');
+
+              // Print only for the first face-up card
+              if (index == firstFaceUpIndex) {
+                print('In column ${widget.columnIndex} is a ${card.cardRank} of ${card.cardSuit} attached to $attachedCardsString');
               }
 
               return Transform(
@@ -56,11 +80,12 @@ class CardColumnState extends State<CardColumn> {
                 child: TransformedCard(
                   playingCard: card,
                   transformIndex: index,
-                  attachedCards:
-                      widget.cards.sublist(index, widget.cards.length),
+                  attachedCards: widget.cards.sublist(
+                      index, widget.cards.length),
                   columnIndex: widget.columnIndex,
                   transformDistance: 20.0,
                   facedownDistance: 8.0,
+                  gameState: widget.gameState,
                 ),
               );
             }).toList(),

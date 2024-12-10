@@ -3,7 +3,7 @@
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
-import 'package:minimalist_solitaire/card_playing.dart';
+import 'package:minimalist_solitaire/card_creation.dart';
 
 class GameState {
   // Stores the cards on the seven columns
@@ -267,20 +267,6 @@ class GameState {
     finalSpadesDeck.addAll(state[11]);
     finalClubsDeck.clear();
     finalClubsDeck.addAll(state[12]);
-  }
-
-  void moveCards(int fromIndex, int toIndex, List<PlayingCard> cards) {
-    getListFromIndex(toIndex).addAll(cards);
-    int length = getListFromIndex(fromIndex).length;
-    getListFromIndex(fromIndex).removeRange(length - cards.length, length);
-    refreshList(getListFromIndex(fromIndex)); // Call with fromIndex
-
-    // Check for win condition after the move
-    if (checkWinCondition()) {
-      if (onWin != null) {
-        onWin!(); // Call the onWin callback if it's set
-      }
-    }
   }
 
   void refreshList(List<PlayingCard> list) {

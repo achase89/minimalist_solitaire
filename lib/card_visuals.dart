@@ -1,14 +1,14 @@
-// card_transformed.dart
+// card_visuals.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:minimalist_solitaire/card_column.dart';
-import 'package:minimalist_solitaire/card_playing.dart';
+import 'card_piles.dart';
+import 'card_creation.dart';
 import 'card_dimensions.dart';
+import 'card_movement.dart';
+import 'game_state.dart';
 import 'styles.dart';
 
-// TransformedCard makes the card draggable and translates it according to
-// position in the stack.
 class TransformedCard extends StatefulWidget {
   final PlayingCard playingCard;
   final double transformDistance;
@@ -16,9 +16,8 @@ class TransformedCard extends StatefulWidget {
   final int transformIndex;
   final int columnIndex;
   final List<PlayingCard> attachedCards;
-
   final Color? backgroundColor;
-
+  final GameState gameState;
   const TransformedCard({
     super.key,
     required this.playingCard,
@@ -27,9 +26,9 @@ class TransformedCard extends StatefulWidget {
     this.transformIndex = 0,
     required this.columnIndex,
     required this.attachedCards,
+    required this.gameState,
     this.backgroundColor,
   });
-
   @override
   TransformedCardState createState() => TransformedCardState();
 }
@@ -43,38 +42,57 @@ class TransformedCardState extends State<TransformedCard> {
   Widget _buildCard() {
     final cardWidth = CardDimensions.calculateCardWidth(context);
     final cardHeight = CardDimensions.calculateCardHeight(cardWidth);
-
     return !widget.playingCard.faceUp
         ? Container(
-            height: cardHeight,
-            width: cardWidth,
-            decoration: BoxDecoration(
-              color:
-                  widget.backgroundColor ?? AppStyles.cardBackBackgroundColor,
-              border: Border.all(
-                color: AppStyles.cardBorderColor,
-                width: AppStyles.cardBorderWidth,
-              ),
-              borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
-            ),
-          )
-        : Draggable<Map>(
-            feedback: CardColumn(
-              cards: widget.attachedCards,
-              columnIndex: 1,
-              onCardsAddedToColumn: (card, position) {},
-            ),
-            childWhenDragging: _buildFaceUpCard(),
-            data: {
-              "cards": widget.attachedCards,
-              "fromIndex": widget.columnIndex,
-            },
-            child: _buildFaceUpCard(),
-          );
+      height: cardHeight,
+      width: cardWidth,
+      decoration: BoxDecoration(
+        color:
+        widget.backgroundColor ?? AppStyles.cardBackBackgroundColor,
+        border: Border.all(
+          color: AppStyles.cardBorderColor,
+          width: AppStyles.cardBorderWidth,
+        ),
+        borderRadius: BorderRadius.circular(AppStyles.cardBorderRadius),
+      ),
+    )
+        : _buildDraggableCard();
   }
 
-  Widget _buildFaceUpCard() {
-    if (widget.attachedCards.length > 1) {
+  Widget _buildDraggableCard() {
+    // Determine feedback based on originPile
+    Widget feedbackWidget;
+    feedbackWidget = SizedBox(
+      width: CardDimensions.calculateCardWidth(context),
+      child: CardColumn(
+        cards: widget.attachedCards,
+        columnIndex: widget.columnIndex,
+        onCardsAddedToColumn: (cards, fromIndex) {
+          CardMovement.moveToColumn(fromIndex, widget.columnIndex, cards, widget.gameState); // Assuming gameState is accessible here
+        },
+        gameState: widget.gameState,
+      ),
+    );
+
+    // Determine childWhenDragging based on originPile
+    Widget childWhenDraggingWidget;
+
+    // Directly show the card below
+    childWhenDraggingWidget = _buildCardBelow();
+
+    return Draggable<Map>(
+      feedback: feedbackWidget,
+      childWhenDragging: childWhenDraggingWidget,
+      data: {
+        "cards": widget.attachedCards,
+        "fromIndex": widget.columnIndex,
+      },
+      child: _buildFaceUpCardVisual(),
+    );
+  }
+
+  Widget _buildFaceUpCardVisual() {
+    if (widget.attachedCards.length > 1) { // Modify this line
       return _buildFaceUpCardPartial(); // Use partial style
     } else {
       return _buildFaceUpCardFull(); // Use full style
@@ -107,11 +125,11 @@ class TransformedCardState extends State<TransformedCard> {
                 fontSize: AppStyles.cardFullFaceTextStyle
                     .fontSize, // Use fontSize from cardFullFaceTextStyle
                 color: widget.playingCard.cardColor ==
-                        CardColor.red // Keep the conditional color logic
+                    CardColor.red // Keep the conditional color logic
                     ? AppStyles
-                        .cardSuitColorLight // Use cardSuitColorLight from AppStyles
+                    .cardSuitColorLight // Use cardSuitColorLight from AppStyles
                     : AppStyles
-                        .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
+                    .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
               ),
             ),
             _suitToImage(widget.playingCard.cardSuit),
@@ -124,7 +142,6 @@ class TransformedCardState extends State<TransformedCard> {
   Widget _buildFaceUpCardPartial() {
     final cardWidth = CardDimensions.calculateCardWidth(context);
     final cardHeight = CardDimensions.calculateCardHeight(cardWidth);
-
     return Material(
       color: Colors.transparent,
       child: Container(
@@ -152,11 +169,11 @@ class TransformedCardState extends State<TransformedCard> {
                       fontSize: AppStyles.cardPartialFaceTextStyle
                           .fontSize, // Use fontSize from cardPartialFaceTextStyle
                       color: widget.playingCard.cardColor ==
-                              CardColor.red // Keep the conditional color logic
+                          CardColor.red // Keep the conditional color logic
                           ? AppStyles
-                              .cardSuitColorLight // Use cardSuitColorLight from AppStyles
+                          .cardSuitColorLight // Use cardSuitColorLight from AppStyles
                           : AppStyles
-                              .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
+                          .cardSuitColorDark, // Use cardSuitColorDark from AppStyles
                     ),
                   ),
                   Padding(
@@ -234,6 +251,23 @@ class TransformedCardState extends State<TransformedCard> {
         );
       default:
         return const SizedBox.shrink();
+    }
+  }
+
+  // Helper method to build the feedback for waste/foundation piles
+  Widget _buildCardBelow() {
+    if (widget.transformIndex > 0 &&
+        widget.attachedCards.isNotEmpty &&
+        widget.transformIndex - 1 < widget.attachedCards.length) {
+      return TransformedCard(
+        playingCard: widget.attachedCards[widget.transformIndex - 1],
+        columnIndex: widget.columnIndex,
+        attachedCards: [widget.attachedCards[widget.transformIndex - 1]],
+        transformIndex: widget.transformIndex - 1,
+        gameState: widget.gameState,
+      );
+    } else {
+      return const SizedBox.shrink();
     }
   }
 }

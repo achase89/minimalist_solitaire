@@ -1,14 +1,14 @@
 // game_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:minimalist_solitaire/card_playing.dart';
-import 'package:minimalist_solitaire/game_state.dart'; // Import your GameState class
+import 'package:minimalist_solitaire/card_creation.dart';
+import 'package:minimalist_solitaire/game_state.dart';
+import 'package:minimalist_solitaire/card_placeholder.dart';
 
-import 'card_column.dart';
+import 'card_piles.dart';
 import 'card_dimensions.dart';
-import 'card_empty.dart';
-import 'card_placeholder.dart';
-import 'card_transformed.dart';
+import 'card_movement.dart';
+import 'card_visuals.dart';
 import 'styles.dart';
 
 class GameScreen extends StatefulWidget {
@@ -56,8 +56,13 @@ class GameScreenManager extends State<GameScreen> {
                             playingCard: gameState.stockPile.last,
                             attachedCards: [gameState.stockPile.last],
                             columnIndex: 0,
+                            gameState: gameState,
                           )
-                        : const CardPlaceholder(),
+                        : CardPlaceholder(
+                      cardsAdded: const [],
+                      columnIndex: 0,
+                      gameState: gameState,
+                    ),
                     onTap: () {
                       setState(() {
                         if (gameState.stockPile.isEmpty) {
@@ -78,13 +83,21 @@ class GameScreenManager extends State<GameScreen> {
                     },
                   ),
                   // Waste pile
-                  gameState.wastePile.isNotEmpty
-                      ? TransformedCard(
-                          playingCard: gameState.wastePile.last,
-                          attachedCards: [gameState.wastePile.last],
-                          columnIndex: 0,
-                        )
-                      : const CardPlaceholder(),
+                  SizedBox(
+                    width: cardWidth,
+                    child: gameState.wastePile.isNotEmpty
+                        ? TransformedCard(
+                            playingCard: gameState.wastePile.last,
+                            attachedCards: [gameState.wastePile.last],
+                            columnIndex: 0,
+                            gameState: gameState,
+                          )
+                        : CardPlaceholder(
+                      cardsAdded: const [],
+                      columnIndex: 0,
+                      gameState: gameState,
+                    ),
+                  ),
 
                   // Spacer between waste pile and foundation piles
                   SizedBox(
@@ -92,53 +105,53 @@ class GameScreenManager extends State<GameScreen> {
                           cardWidth), // Spacer between waste pile and foundation piles
 
                   //Foundation Piles
-                  FoundationPile(
-                    cardSuit: CardSuit.hearts,
-                    cardsAdded: gameState.finalHeartsDeck,
-                    onCardAddedToFoundation: (cards, index) {
+                  CardPlaceholder(
+                    cardSuit: CardSuit.clubs,
+                    cardsAdded: gameState.finalClubsDeck,
+                    onCardAdded: (cards, index) {
                       setState(() {
-                        gameState.moveCards(
-                            index, GameState.finalHeartsDeckIndex, cards);
+                        CardMovement.moveToFoundation(index, cards, gameState);
                         gameState.saveGameState();
                       });
                     },
                     columnIndex: 8,
+                    gameState: gameState,
                   ),
-                  FoundationPile(
+                  CardPlaceholder(
                     cardSuit: CardSuit.diamonds,
                     cardsAdded: gameState.finalDiamondsDeck,
-                    onCardAddedToFoundation: (cards, index) {
+                    onCardAdded: (cards, index) {
                       setState(() {
-                        gameState.moveCards(
-                            index, GameState.finalDiamondsDeckIndex, cards);
+                        CardMovement.moveToFoundation(index, cards, gameState);
                         gameState.saveGameState();
                       });
                     },
                     columnIndex: 9,
+                    gameState: gameState,
                   ),
-                  FoundationPile(
-                    cardSuit: CardSuit.spades,
-                    cardsAdded: gameState.finalSpadesDeck,
-                    onCardAddedToFoundation: (cards, index) {
+                  CardPlaceholder(
+                    cardSuit: CardSuit.hearts,
+                    cardsAdded: gameState.finalHeartsDeck,
+                    onCardAdded: (cards, index) {
                       setState(() {
-                        gameState.moveCards(
-                            index, GameState.finalSpadesDeckIndex, cards);
+                        CardMovement.moveToFoundation(index, cards, gameState);
                         gameState.saveGameState();
                       });
                     },
                     columnIndex: 10,
+                    gameState: gameState,
                   ),
-                  FoundationPile(
-                    cardSuit: CardSuit.clubs,
-                    cardsAdded: gameState.finalClubsDeck,
-                    onCardAddedToFoundation: (cards, index) {
+                  CardPlaceholder(
+                    cardSuit: CardSuit.spades,
+                    cardsAdded: gameState.finalSpadesDeck,
+                    onCardAdded: (cards, index) {
                       setState(() {
-                        gameState.moveCards(
-                            index, GameState.finalClubsDeckIndex, cards);
+                        CardMovement.moveToFoundation(index, cards, gameState);
                         gameState.saveGameState();
                       });
                     },
                     columnIndex: 11,
+                    gameState: gameState,
                   ),
                 ],
               ),
@@ -158,11 +171,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn1,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 1, cards);
+                          CardMovement.moveToColumn(fromIndex, 1, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 1,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -172,11 +187,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn2,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 2, cards);
+                          CardMovement.moveToColumn(fromIndex, 2, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 2,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -186,11 +203,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn3,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 3, cards);
+                          CardMovement.moveToColumn(fromIndex, 3, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 3,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -200,11 +219,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn4,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 4, cards);
+                          CardMovement.moveToColumn(fromIndex, 4, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 4,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -214,11 +235,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn5,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 5, cards);
+                          CardMovement.moveToColumn(fromIndex, 5, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 5,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -228,11 +251,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn6,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 6, cards);
+                          CardMovement.moveToColumn(fromIndex, 6, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 6,
+                      gameState: gameState,
                     ),
                   ),
                   SizedBox(
@@ -242,11 +267,13 @@ class GameScreenManager extends State<GameScreen> {
                       cards: gameState.cardColumn7,
                       onCardsAddedToColumn: (cards, fromIndex) {
                         setState(() {
-                          gameState.moveCards(fromIndex, 7, cards);
+                          CardMovement.moveToColumn(fromIndex, 7, cards,
+                              gameState); // Call the new method
                           gameState.saveGameState();
                         });
                       },
                       columnIndex: 7,
+                      gameState: gameState,
                     ),
                   ),
                 ],
